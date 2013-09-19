@@ -1,0 +1,11 @@
+mil:
+  name: rocket_center
+  queues:
+    rocket_shield:
+      bind: amq.fanout
+    rocket_launcher:
+      bind: amq.fanout
+  messages:
+    protect:
+
+    shed:

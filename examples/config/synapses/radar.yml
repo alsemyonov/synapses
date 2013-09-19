@@ -1,0 +1,19 @@
+gov:
+  name: radar
+  queues:
+    logger:
+      bind: amq.fanout
+  messages:
+    ufo:
+      class_name: UFO
+      schema:
+        shape: String
+        color: string
+    rocket:
+      schema:
+        speed: Integer
+        target: [Integer, Integer]
+    plane:
+      schema:
+        brand: String
+        color: String

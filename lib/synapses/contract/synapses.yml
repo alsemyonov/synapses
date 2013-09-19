@@ -1,0 +1,14 @@
+amq:
+  exchanges:
+    fanout:
+      type: fanout
+    direct:
+      type: direct
+    '':
+      type: direct
+    topic:
+      type: topic
+    match:
+      type: headers
+    headers:
+      type: headers

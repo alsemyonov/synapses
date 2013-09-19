@@ -1,0 +1,10 @@
+exchanges:
+  direct:
+    type: direct
+  fanout:
+    type: fanout
+  weather:
+    type: topic
+  headers:
+    type: header
+queues:
