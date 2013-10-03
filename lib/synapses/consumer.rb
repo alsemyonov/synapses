@@ -70,22 +70,22 @@ module Synapses
         end
       end
 
-      unless (typed_subscriptions + typeless_subscriptions).any?
-        puts "#{self} -> #{metadata.type}, #{payload}"
-        #puts "#{self} received a message:"
-        #puts "  metadata.routing_key : #{metadata.routing_key}"
-        #puts "  metadata.content_type: #{metadata.content_type}"
-        #puts "  metadata.priority    : #{metadata.priority}"
-        #puts "  metadata.headers     : #{metadata.headers.inspect}"
-        #puts "  metadata.timestamp   : #{metadata.timestamp.inspect}"
-        #puts "  metadata.type        : #{metadata.type}"
-        #puts "  metadata.delivery_tag: #{metadata.delivery_tag}"
-        #puts "  metadata.redelivered : #{metadata.redelivered}"
-        ##puts "  metadata.app_id      : #{metadata.app_id}"
-        #puts "  metadata.exchange    : #{metadata.exchange}"
-        #puts
-        #puts "  Received a message: #{payload}"
-      end
+      #unless (typed_subscriptions + typeless_subscriptions).any?
+      #  puts "#{self} received: #{metadata.type}, #{payload}"
+      #  #puts "#{self} received a message:"
+      #  #puts "  metadata.routing_key : #{metadata.routing_key}"
+      #  #puts "  metadata.content_type: #{metadata.content_type}"
+      #  #puts "  metadata.priority    : #{metadata.priority}"
+      #  #puts "  metadata.headers     : #{metadata.headers.inspect}"
+      #  #puts "  metadata.timestamp   : #{metadata.timestamp.inspect}"
+      #  #puts "  metadata.type        : #{metadata.type}"
+      #  #puts "  metadata.delivery_tag: #{metadata.delivery_tag}"
+      #  #puts "  metadata.redelivered : #{metadata.redelivered}"
+      #  ##puts "  metadata.app_id      : #{metadata.app_id}"
+      #  #puts "  metadata.exchange    : #{metadata.exchange}"
+      #  #puts
+      #  #puts "  Received a message: #{payload}"
+      #end
     rescue => e
       puts e
     end
@@ -96,7 +96,7 @@ module Synapses
     def queue
       @queue ||= begin
         queue = contract.queue(queue_name, channel)
-        queue.bind(exchange)
+        #queue.bind(exchange)
         queue
       end
     end

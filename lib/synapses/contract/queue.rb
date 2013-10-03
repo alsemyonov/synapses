@@ -9,38 +9,39 @@ module Synapses
       # @return [String]
       attr_accessor :name
 
-      # @return [Hash] see {AMQP::Queue#initialize}
-      attr_accessor :options
+      # @return [<String>]
+      attr_accessor :bindings
 
       # @param [String] name
       # @param [Hash] options see {AMQP::Queue#initialize}
       def initialize(name, options = {})
         @name = name
-        @bind = options.delete('bind') { raise "Exchange :bind is not specified for queue #{name}" }
+        @namespace = options.delete('namespace')
+        if options.key?('binding')
+          @bindings = [options.delete('binding')]
+        else
+          @bindings = options.delete('bindings') { raise "Bindings are not specified for queue #{name}" }
+        end
+        if @bindings.is_a?(Array)
+          @bindings = @bindings.inject({}) do |result, exchange|
+            result[exchange] = {}
+            result
+          end
+        end
         @options = options || {}
       end
 
-      # @return [AMQP::Channel]
-      attr_accessor :channel
-      def channel
-        @channel ||= Synapses.default_channel
+      def instance_attributes
+        [name, options]
       end
 
-      # @return [AMQP::Queue]
-      def connect(channel=self.channel)
-        @queue = AMQP::Queue.new(channel, name, options)
+      # @return [Hash] see {AMQP::Queue#initialize}
+      def options
+        @options.symbolize_keys
       end
 
-      # @return [Boolean]
-      def connected?
-        !!@queue
-      end
-
-      # @param [AMQP::Channel] channel
-      # @return [AMQP::Queue]
-      def queue(channel=self.channel)
-        connect(channel) unless connected?
-        @queue
+      def system?
+        @namespace == 'amq'
       end
     end
   end

@@ -1,2 +1,2 @@
 development:
-  uri: amqp://localhost
+  uri: amqp://localhost:5672

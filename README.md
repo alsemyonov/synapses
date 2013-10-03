@@ -1,5 +1,9 @@
 # Synapses
 
+[![Code Climate](https://codeclimate.com/github/alsemyonov/synapses.png)](https://codeclimate.com/github/alsemyonov/synapses)
+[![Build Status](https://travis-ci.org/alsemyonov/synapses.png?branch=master)](http://travis-ci.org/alsemyonov/synapses)
+[![Dependency Status](https://gemnasium.com/alsemyonov/synapses.png)](https://gemnasium.com/alsemyonov/synapses)
+
 TODO: Write a gem description
 
 ## Installation

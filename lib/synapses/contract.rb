@@ -46,6 +46,12 @@ module Synapses
       @queues = Hash.new do |hash, name|
         raise "Unknown Queue #{name.inspect}. Known are: #{hash.keys.inspect}"
       end
+      @namespaces = Hash.new do |hash, name|
+        raise "Unknown Namespace #{name.inspect}. Known are: #{hash.keys.inspect}"
+      end
+      @messages = Hash.new do |hash, name|
+        raise "Unknown Message type #{name.inspect}. Known are: #{hash.keys.inspect}"
+      end
       @options = options
       add_contract(hash)
     end
@@ -58,26 +64,56 @@ module Synapses
         name = hash.delete('name')
         prefix = [ns, name].compact.join('.')
 
-        if hash['exchanges']
-          hash.delete('exchanges').each do |name, attributes|
-            name = [prefix, name].join('.').to_s
-            exchanges[name] = Exchange.new(name, attributes || {})
-          end
-        end
+        namespaces[prefix] = {exchanges: [], queues: [], messages: []} unless namespaces.key?(prefix)
 
-        if hash['queues']
-          hash.delete('queues').each do |name, attributes|
-            name = [prefix, name].join('.').to_s
-            queues[name.to_s] = Queue.new(name, attributes || {})
-          end
-        end
+        extract_collection(prefix, :exchanges, hash)
+        extract_collection(prefix, :queues, hash)
+        extract_collection(prefix, :messages, hash)
       end
     end
 
-    # @param [AMQP::Channel] channel
-    def setup!(channel = Synapses.default_channel)
-      exchanges.values.each { |exchange| exchange.exchange(channel) }
-      queues.values.each { |queue| queue.queue(channel) }
+    alias << add_contract
+
+    def setup!
+      EM.next_tick do
+        #setup_channel = Synapses.another_channel
+        #setup_channel = Synapses.default_channel
+        sleep(0.01) until AMQP.channel.try(:connection).try(:connected?)
+        setup_channel = AMQP.channel
+        cache = {
+          exchanges: {},
+          queues: {}
+        }
+        exchanges.values.each do |exchange|
+          next if exchange.system?
+          puts "Setting up exchange: #{exchange.inspect}"
+          cache[:exchanges][exchange.name] ||= AMQP::Exchange.new(setup_channel, exchange.type, exchange.name, exchange.options)
+          puts cache[:exchanges][exchange.name]
+        end
+        queues.values.each do |queue|
+          next if queue.system?
+          puts "Setting up queue: #{queue.inspect}"
+          cache[:exchanges][queue.name] ||= AMQP::Queue.new(setup_channel, queue.name, queue.options)
+          puts cache[:exchanges][queue.name]
+          queue.bindings.each do |binding, options|
+            puts "Binding queue #{queue.name} to #{binding}, #{options} (#{cache[:exchanges][binding]})"
+            cache[:exchanges][queue.name].bind(cache[:exchanges][binding], options)
+            #puts cache[:exchanges][queue.name].inspect
+          end
+        end
+        #setup_channel.close
+      end
+    end
+
+    def generate!
+      generator = Generator.new(self)
+      generator.write!
+    end
+
+    def load!
+      namespaces.each do |namespace, _|
+        require "synapses/contracts/#{namespace}" unless namespace == 'amq'
+      end
     end
 
     # @param [Synapses::Contract::Exchange] name
@@ -93,22 +129,52 @@ module Synapses
     # @param [String] name
     # @return [AMQP::Exchange]
     def exchange(name, channel=Synapses.default_channel)
-      exchange_definition(name).exchange(channel)
+      exchange = exchanges[name.to_s]
+      AMQP::Exchange.new(channel, exchange.type, exchange.name, exchange.options.merge(passive: true))
     end
 
     # @param [String] name
     # @param [AMQP::Channel] channel
     # @return [AMQP::Queue]
     def queue(name, channel=Synapses.default_channel)
-      queue_definition(name).queue(channel)
+      queue = queues[name.to_s]
+      AMQP::Queue.new(channel, queue.name, queue.options.merge(passive: true))
     end
 
     # @return [Hash]
     attr_reader :exchanges
     # @return [Hash]
     attr_reader :queues
+    # @return [Hash]
+    attr_reader :namespaces
+    # @return [Hash]
+    attr_reader :messages
+
+    protected
+
+    # @param [String] namespace
+    # @param [Symbol] type
+    # @param [Hash] hash
+    def extract_collection(namespace, type, hash)
+      collection = hash.delete(type.to_s) { {} }
+      collection.each do |name, attributes|
+        attributes ||= {}
+        name = attributes.delete('name') { [namespace, name].join('.').to_s }
+        attributes['namespace'] = namespace
+        public_send(type)[name] = MAPPINGS[type].new(name, attributes)
+        namespaces[namespace][type] << name
+      end
+    end
+
+    require 'synapses/contract/exchange'
+    require 'synapses/contract/queue'
+    require 'synapses/contract/message_type'
+    require 'synapses/contract/generator'
+
+    MAPPINGS = {
+      exchanges: Exchange,
+      queues: Queue,
+      messages: MessageType
+    }
   end
 end
-
-require 'synapses/contract/exchange'
-require 'synapses/contract/queue'

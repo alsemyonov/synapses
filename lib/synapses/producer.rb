@@ -13,14 +13,15 @@ module Synapses
   class Producer
     include Contract::Definitions
 
-    def initialize(channel = nil)
+    def initialize(channel = AMQP.channel)
       @channel = channel
     end
 
     def <<(message)
-      EventMachine.next_tick do
+      puts #"publishing #{message.to_payload}, #{message.options}"
+      EM.next_tick do
         exchange.publish(message.to_payload, message.options) do
-          puts "published [#{message.to_payload}, #{message.options}]"
+          #puts "published [#{message.to_payload}, #{message.options}]"
         end
       end
     end

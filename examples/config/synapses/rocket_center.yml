@@ -1,11 +1,20 @@
 mil:
   name: rocket_center
+  exchanges:
+    commander:
+      type: topic
+      durable: true
   queues:
     rocket_shield:
-      bind: amq.fanout
+      binding: gov.radar.announce
+      auto_delete: false
+      durable: true
     rocket_launcher:
-      bind: amq.fanout
+      binding: gov.radar.announce
+      auto_delete: false
+      durable: true
   messages:
     protect:
-
+      schema:
+        target: [Decimal, Decimal]
     shed:

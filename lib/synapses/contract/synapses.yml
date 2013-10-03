@@ -5,6 +5,7 @@ amq:
     direct:
       type: direct
     '':
+      name: ''
       type: direct
     topic:
       type: topic

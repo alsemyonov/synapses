@@ -8,6 +8,7 @@
 require 'synapses/version'
 require 'active_support'
 require 'active_support/core_ext/class/attribute'
+require 'active_support/core_ext/object/try'
 require 'amqp'
 
 # @author Alexander Semyonov <al@semyonov.us>
@@ -25,29 +26,26 @@ module Synapses
   end
 
   def self.default_connection
-    @default_connection || manager.start && @default_connection
+    manager.start
+    AMQP.connection
   end
 
-  def self.default_connection=(connection)
-    @default_connection = connection
-  end
 
+# @return [AMQP::Channel]
   def self.another_channel(connection = Synapses.default_connection)
     manager.channel(connection)
   end
 
   def self.setup
-    default_contract
     manager.start
     default_connection
     default_channel
-    sleep(0.25)
-    #default_contract.setup!
     true
   rescue => e
     STDERR.puts e.message, e.backtrace
     false
   end
+
 end
 
 require 'synapses/contract'

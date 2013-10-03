@@ -1,8 +1,15 @@
 gov:
   name: radar
+  exchanges:
+    announce:
+      type: fanout
+      auto_delete: false
+      durable: true
   queues:
     logger:
-      bind: amq.fanout
+      binding: gov.radar.announce
+      exclusive: true
+      durable: true
   messages:
     ufo:
       class_name: UFO
@@ -12,7 +19,7 @@ gov:
     rocket:
       schema:
         speed: Integer
-        target: [Integer, Integer]
+        target: [Decimal, Decimal]
     plane:
       schema:
         brand: String
