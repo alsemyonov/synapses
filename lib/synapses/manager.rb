@@ -30,7 +30,7 @@ module Synapses
                    settings[:uri] || options_or_uri
                  end
 
-      EventMachine.next_tick do
+      EM.schedule do
         AMQP.logging = true
         AMQP.start(arg, &block)
       end
@@ -58,7 +58,7 @@ module Synapses
       end
     end
 
-    def channel(connection = Synapses.default_connection)
+    def channel(connection = Synapses.connection)
       start
       channel = AMQP::Channel.new(connection, AMQP::Channel.next_channel_id, auto_recovery: true)
       channel.on_error do |ch, channel_close|

@@ -1,12 +1,13 @@
 # coding: utf-8
 require 'synapses'
+require 'synapses/messages'
 require 'synapses/contracts/autogen/<%= namespace %>'
 
 module Synapses
   module Contracts
 <% module_for_namespace(namespace) do %>
 module Messages
-  include Synapses::Messages
+  include ::Synapses::Messages
 
   <% messages.each do |message| %>
   class <%= message.class_name %> < Message

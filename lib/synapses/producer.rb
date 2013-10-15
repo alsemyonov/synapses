@@ -7,23 +7,34 @@
 
 require 'synapses'
 require 'synapses/contract/definitions'
+require 'synapses/producer/routable'
 
 module Synapses
   # @author Alexander Semyonov <al@semyonov.us>
   class Producer
     include Contract::Definitions
+    include Producer::Routable
+    include Synapses::Logging
 
     def initialize(channel = AMQP.channel)
       @channel = channel
     end
 
-    def <<(message)
-      puts #"publishing #{message.to_payload}, #{message.options}"
-      EM.next_tick do
-        exchange.publish(message.to_payload, message.options) do
-          #puts "published [#{message.to_payload}, #{message.options}]"
+    # @param [String, Synapses::Messages::Message] message
+    # @param [Hash] metadata
+    def publish(message, metadata = {}, &block)
+      logger.debug "Publishing... #{message} #{metadata}"
+      EM.schedule do
+        metadata = message.to_metadata.merge(metadata) if message.respond_to?(:to_metadata)
+        exchange.publish(message, metadata) do
+          logger.debug "published [#{message}, #{metadata}]"
+          block.call if block_given?
         end
       end
+    rescue => e
+      logger.log_exception(e)
     end
+
+    alias << publish
   end
 end

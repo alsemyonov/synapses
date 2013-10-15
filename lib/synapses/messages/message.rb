@@ -1,5 +1,6 @@
 require 'synapses/messages'
 require 'synapses/messages/coders'
+require 'active_support/core_ext/module/delegation'
 
 module Synapses
   module Messages
@@ -48,7 +49,7 @@ module Synapses
       end
 
       def self.parse(metadata, payload)
-        new(Synapses::Messages::Coders.decode(payload, metadata.content_type).merge(metadata: metadata))
+        new(Synapses::Messages::Coders.decode(payload, metadata.content_type), metadata)
       end
 
       def initialize(attributes = {}, metadata = {})
@@ -60,7 +61,15 @@ module Synapses
             @attributes[name] = value
           end
         end
-        metadata.assert_valid_keys(:routing_key, :type)
+        #metadata.assert_valid_keys(
+        #  :routing_key, :persistent, :mandatory,  :content_type,
+        #  :content_encoding, :priority, :message_id, :correlation_id, :reply_to,
+        #  :type, :user_id, :app_id, :timestamp, :expiration, :headers
+        #)
+        if metadata.is_a?(AMQP::Header)
+          @header = metadata
+        end
+        @metadata = metadata
       end
 
       attr_accessor :metadata
@@ -72,9 +81,11 @@ module Synapses
         end.merge(@attributes)
       end
 
+      # @return [String]
       def to_payload
-        Synapses::Messages::Coders.encode(attributes, content_type)
+        Synapses::Messages::Coders.encode(attributes, content_type).to_s
       end
+      alias to_s to_payload
 
       def message_type
         @message_type || self.class.message_type
@@ -84,7 +95,10 @@ module Synapses
       alias type message_type
       alias type= message_type=
 
-      def options
+      delegate :reply_to, :message_id,
+        :ack, :nack, to: '@header', allow_nil: true
+
+      def to_metadata
         {
           routing_key: routing_key,
           type: message_type,

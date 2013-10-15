@@ -44,7 +44,7 @@ module Synapses
 
       def module_for_namespace(namespace, &block)
         indent = '  '
-        modules = namespace.split(/\./).map { |name| "#{(indent << '  ')}module #{name.underscore.classify}\n" }
+        modules = namespace.split(/\./).map { |name| "#{(indent << '  ')}module #{name.underscore.camelcase(:upper)}\n" }
         erbout = block.binding.eval('_erbout')
         modules.each { |mod| erbout << mod }
         block.binding.eval('_erbout, @_old_erbout = "", _erbout')

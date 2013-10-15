@@ -11,6 +11,8 @@ require 'yaml'
 module Synapses
   # @author Alexander Semyonov <al@semyonov.us>
   class Contract
+    include Synapses::Logging
+
     # @return [String]
     def self.default_contract_path
       File.expand_path('../contract/synapses.yml', __FILE__)
@@ -30,29 +32,31 @@ module Synapses
       ([File.join(root, 'config/synapses.yml')] +
         Dir[File.join(root, 'config/synapses/*.yml')]).each do |file_name|
 
-        if File.exists?(file_name)
-          hash = YAML.load_file(file_name)
-          contract.add_contract(hash)
-        end
+        contract.load_file(file_name) if File.exists?(file_name)
       end
       contract
     end
 
     # @param [Hash] hash
     def initialize(hash, options = {})
-      @exchanges = Hash.new do |hash, name|
-        raise "Unknown Exchange #{name.inspect}. Known are: #{hash.keys.inspect}"
+      @exchanges = Hash.new do |exchanges, name|
+        raise UnknownExchangeError.new(name, exchanges.keys)
       end
-      @queues = Hash.new do |hash, name|
-        raise "Unknown Queue #{name.inspect}. Known are: #{hash.keys.inspect}"
+      @queues = Hash.new do |queues, name|
+        raise UnknownQueueError.new(name, queues.keys)
       end
-      @namespaces = Hash.new do |hash, name|
-        raise "Unknown Namespace #{name.inspect}. Known are: #{hash.keys.inspect}"
+      @namespaces = Hash.new do |namespaces, name|
+        raise UnknownNamespaceError.new(name, namespaces.keys)
       end
       @messages = Hash.new do |hash, name|
-        raise "Unknown Message type #{name.inspect}. Known are: #{hash.keys.inspect}"
+        raise UnknownMessageError.new(name, hash.keys)
       end
       @options = options
+      add_contract(hash)
+    end
+
+    def load_file(file_name)
+      hash = YAML.load_file(file_name)
       add_contract(hash)
     end
 
@@ -71,14 +75,12 @@ module Synapses
         extract_collection(prefix, :messages, hash)
       end
     end
-
     alias << add_contract
 
     def setup!
-      EM.next_tick do
+      EM.schedule do
         #setup_channel = Synapses.another_channel
         #setup_channel = Synapses.default_channel
-        sleep(0.01) until AMQP.channel.try(:connection).try(:connected?)
         setup_channel = AMQP.channel
         cache = {
           exchanges: {},
@@ -86,19 +88,20 @@ module Synapses
         }
         exchanges.values.each do |exchange|
           next if exchange.system?
-          puts "Setting up exchange: #{exchange.inspect}"
+          logger.debug "Setting up exchange: #{exchange.inspect}"
           cache[:exchanges][exchange.name] ||= AMQP::Exchange.new(setup_channel, exchange.type, exchange.name, exchange.options)
-          puts cache[:exchanges][exchange.name]
         end
         queues.values.each do |queue|
           next if queue.system?
-          puts "Setting up queue: #{queue.inspect}"
+          logger.debug "Setting up queue: #{queue.inspect}"
           cache[:exchanges][queue.name] ||= AMQP::Queue.new(setup_channel, queue.name, queue.options)
-          puts cache[:exchanges][queue.name]
           queue.bindings.each do |binding, options|
-            puts "Binding queue #{queue.name} to #{binding}, #{options} (#{cache[:exchanges][binding]})"
-            cache[:exchanges][queue.name].bind(cache[:exchanges][binding], options)
-            #puts cache[:exchanges][queue.name].inspect
+            exchange = cache[:exchanges][binding]
+            logger.debug "Binding queue #{queue.name} to #{exchange.name}, #{options} (#{cache[:exchanges][binding]})"
+            cache[:exchanges][queue.name].bind(exchange, options.symbolize_keys) do |bind_ok|
+              logger.debug(bind_ok)
+              logger.debug("Just bound #{queue.name} to #{exchange.name}")
+            end
           end
         end
         #setup_channel.close
@@ -128,7 +131,7 @@ module Synapses
 
     # @param [String] name
     # @return [AMQP::Exchange]
-    def exchange(name, channel=Synapses.default_channel)
+    def exchange(name, channel=Synapses.channel)
       exchange = exchanges[name.to_s]
       AMQP::Exchange.new(channel, exchange.type, exchange.name, exchange.options.merge(passive: true))
     end
@@ -136,7 +139,7 @@ module Synapses
     # @param [String] name
     # @param [AMQP::Channel] channel
     # @return [AMQP::Queue]
-    def queue(name, channel=Synapses.default_channel)
+    def queue(name, channel=Synapses.channel)
       queue = queues[name.to_s]
       AMQP::Queue.new(channel, queue.name, queue.options.merge(passive: true))
     end

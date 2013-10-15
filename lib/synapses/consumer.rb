@@ -12,6 +12,7 @@ module Synapses
   # @author Alexander Semyonov <al@semyonov.us>
   class Consumer
     include Contract::Definitions
+    include Synapses::Logging
 
     # @return [String]
     class_attribute :queue_name
@@ -30,7 +31,7 @@ module Synapses
 
     # @param [String] name
     # @param [Synapses::Contract] contract
-    def self.queue(name, contract=Synapses.default_contract)
+    def self.queue(name, contract = Synapses.default_contract)
       self.queue_name = name
       self.contract = contract
     end
@@ -43,11 +44,15 @@ module Synapses
       end
     end
 
-    # @param [AMQP::Channel] channel
-    def initialize(channel = Synapses.default_channel)
-      @channel = channel
+    # @param [Hash] options
+    # @option options [AMQP::Channel] :channel
+    def initialize(options = {})
+      @channel = options.fetch(:channel) { Synapses.channel }
+      @queue = options.fetch(:queue) { nil }
 
-      queue.subscribe(&method(:message_handler))
+      subscription_options = options.except(:channel, :queue)
+
+      queue.subscribe(subscription_options, &method(:message_handler))
     end
 
     # @param [AMQP::Header] metadata
@@ -55,50 +60,39 @@ module Synapses
       if (typed_subscriptions = self.subscriptions[metadata.type]).any?
         typed_subscriptions.each do |message_class, block|
           message = message_class.parse(metadata, payload)
-          block.call(message)
+          instance_exec(message, &block)
         end
       end
 
       if (typeless_subscriptions = self.subscriptions[nil]).any?
         typeless_subscriptions.each do |_, block|
           if block.arity == 2
-            block.call(metadata, payload)
+            instance_exec(metadata, payload, &block)
           else
             message = Messages.parse(metadata, payload)
-            block.call(message)
+            instance_exec(message, &block)
           end
         end
       end
 
-      #unless (typed_subscriptions + typeless_subscriptions).any?
-      #  puts "#{self} received: #{metadata.type}, #{payload}"
-      #  #puts "#{self} received a message:"
-      #  #puts "  metadata.routing_key : #{metadata.routing_key}"
-      #  #puts "  metadata.content_type: #{metadata.content_type}"
-      #  #puts "  metadata.priority    : #{metadata.priority}"
-      #  #puts "  metadata.headers     : #{metadata.headers.inspect}"
-      #  #puts "  metadata.timestamp   : #{metadata.timestamp.inspect}"
-      #  #puts "  metadata.type        : #{metadata.type}"
-      #  #puts "  metadata.delivery_tag: #{metadata.delivery_tag}"
-      #  #puts "  metadata.redelivered : #{metadata.redelivered}"
-      #  ##puts "  metadata.app_id      : #{metadata.app_id}"
-      #  #puts "  metadata.exchange    : #{metadata.exchange}"
-      #  #puts
-      #  #puts "  Received a message: #{payload}"
-      #end
+      unless (typed_subscriptions + typeless_subscriptions).any?
+        #puts "  metadata.priority    : #{metadata.priority}"
+        #puts "  metadata.headers     : #{metadata.headers.inspect}"
+        #puts "  metadata.timestamp   : #{metadata.timestamp.inspect}"
+        #puts "  metadata.delivery_tag: #{metadata.delivery_tag}"
+        #puts "  metadata.redelivered : #{metadata.redelivered}"
+        #puts "  metadata.exchange    : #{metadata.exchange}"
+        logger.debug("Message was not processed: [#{metadata.type}] #{payload}, #{metadata.inspect}")
+      end
     rescue => e
-      puts e
+      logger.log_exception(e)
     end
 
     # @return [AMQP::Channel]
     attr_accessor :channel
 
     def queue
-      @queue ||= begin
-        queue = contract.queue(queue_name, channel)
-        #queue.bind(exchange)
-        queue
-      end
+      @queue ||= contract.queue(queue_name, channel)
     end
   end
 end
