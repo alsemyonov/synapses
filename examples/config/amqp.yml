@@ -1,2 +1,0 @@
-development:
-  uri: amqp://localhost:5672

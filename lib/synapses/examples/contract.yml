@@ -19,3 +19,49 @@ synapses.examples.get_time:
       schema:
         procedure: String
         result: String
+synapses.examples.rockets.gov:
+  name: radar
+  exchanges:
+    announce:
+      type: fanout
+      auto_delete: true
+      durable: true
+  queues:
+    logger:
+      binding: synapses.examples.rockets.gov.radar.announce
+      exclusive: true
+      durable: true
+  messages:
+    ufo:
+      class_name: UFO
+      schema:
+        shape: String
+        color: string
+    rocket:
+      schema:
+        speed: Integer
+        target: [Decimal, Decimal]
+    plane:
+      schema:
+        brand: String
+        color: String
+synapses.examples.rockets.mil:
+  name: rocket_center
+  exchanges:
+    commander:
+      type: topic
+      durable: true
+  queues:
+    rocket_shield:
+      binding: synapses.examples.rockets.gov.radar.announce
+      auto_delete: false
+      durable: true
+    rocket_launcher:
+      binding: synapses.examples.rockets.gov.radar.announce
+      auto_delete: false
+      durable: true
+  messages:
+    protect:
+      schema:
+        target: [Decimal, Decimal]
+    shed:

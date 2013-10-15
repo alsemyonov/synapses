@@ -23,11 +23,11 @@ module Synapses
     # @param [String, Synapses::Messages::Message] message
     # @param [Hash] metadata
     def publish(message, metadata = {}, &block)
-      logger.debug "Publishing... #{message} #{metadata}"
       EM.schedule do
+        logger.debug(to_s) { "publishing... #{message} #{metadata}" }
         metadata = message.to_metadata.merge(metadata) if message.respond_to?(:to_metadata)
         exchange.publish(message, metadata) do
-          logger.debug "published [#{message}, #{metadata}]"
+          logger.debug(to_s) { "published #{message}, #{metadata}]" }
           block.call if block_given?
         end
       end
