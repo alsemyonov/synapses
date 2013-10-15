@@ -1,0 +1,32 @@
+synapses:
+  exchanges:
+    direct:
+      type: direct
+      auto_delete: true
+    fanout:
+      type: fanout
+      auto_delete: true
+    weather:
+      type: topic
+      auto_delete: true
+    headers:
+      type: header
+      auto_delete: true
+    rr:
+      type: topic
+      auto_delete: true
+  queues:
+    rr-reply:
+      bindings:
+        synapses.rr:
+          auto_delete: true
+    services.get_time:
+      bindings:
+        synapses.rr:
+          exclusive: true
+          auto_delete: true
+  messages:
+    rr.procedure:
+      schema:
+        procedure: String
+        arguments: []

@@ -17,24 +17,21 @@ module Synapses
         self.exchange = 'synapses.examples.get_time.service'
 
         def get_local
-          logger.info('Requesting local time...')
+          logger.info(self.class.name) { 'Requesting local time...' }
           publish Messages::Procedure.new({procedure: 'get.time.local'}), routing_key: GET_TIME_SERVICE
         end
 
         def get_utc
           get_time_in('UTC')
-          #logger.info('Requesting UTC time...')
-          #publish Messages::Procedure.new({procedure: 'get.time.utc'}), routing_key: GET_TIME_SERVICE
         end
 
         def get_time_in(time_zone)
-          logger.info("Requesting time in #{time_zone}...")
+          logger.info(self.class.name) { "Requesting time in #{time_zone}..." }
           publish Messages::Procedure.new({procedure: 'get.time.zone', arguments: time_zone}), routing_key: GET_TIME_SERVICE
         end
 
         on_reply Messages::ProcedureResult do |reply|
-          logger.info('Received reply:')
-          logger.info("#{reply.procedure}, #{reply.result}")
+          logger.info(self.class.name) { "Received reply: #{reply.procedure}, #{reply.result}" }
         end
       end
 
@@ -45,24 +42,19 @@ module Synapses
         on Messages::Procedure do |procedure|
           case procedure.procedure
           when 'get.time.utc'
-            logger.info('Request for UTC time')
+            logger.info(self.class.name) { "Request for UTC time [#{procedure.message_id}]" }
             reply_to(procedure, Messages::ProcedureResult.new(procedure: procedure.procedure, result: get_time('UTC').xmlschema))
           when 'get.time.local'
-            logger.info('Request for local time')
+            logger.info(self.class.name) { "Request for local time [#{procedure.message_id}]" }
             reply_to(procedure, Messages::ProcedureResult.new(procedure: procedure.procedure, result: get_time(nil).xmlschema))
           when 'get.time.zone'
-            logger.info("Request for time in TZ: #{procedure.arguments}")
+            logger.info(self.class.name) { "Request for time in TZ #{procedure.arguments.inspect} [#{procedure.message_id}]" }
             reply_to(procedure, Messages::ProcedureResult.new(procedure: procedure.procedure, result: get_time(procedure.arguments).xmlschema))
           else
-            logger.warn("Unknown procedure called: #{procedure.message_type}")
+            logger.warn(self.class.name) { "Unknown procedure called: #{procedure.message_type}" }
             raise "Unknown procedure called: #{procedure.message_type}"
           end
         end
-
-        #on do |metadata, payload|
-        #  puts "ONONON"
-        #  logger.warn("Received unknown message: #{payload}, #{metadata.type}")
-        #end
 
         protected
 

@@ -15,3 +15,5 @@ RSpec.configure do |config|
   #     --seed 1234
   config.order = 'random'
 end
+
+Dir[File.expand_path('../support/**/*.rb', __FILE__)].each { |filename| require(filename) }

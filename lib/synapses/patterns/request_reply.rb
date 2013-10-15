@@ -53,7 +53,7 @@ module Synapses
         end
 
         def initialize(options = {})
-          logger.info("Initializing #{self}")
+          logger.debug("Initializing #{self}")
           @channel = options.fetch(:channel) { Synapses.channel }
           EM.schedule do
             producer

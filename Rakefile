@@ -20,6 +20,7 @@ namespace :doc do
   end
 
   begin
+    require 'forwardable'
     require 'yardstick/rake/measurement'
 
     Yardstick::Rake::Measurement.new(:measure) do |measurement|
@@ -33,6 +34,7 @@ namespace :doc do
   end
 
   begin
+    require 'forwardable'
     require 'yardstick/rake/verify'
     Yardstick::Rake::Verify.new(:verify) do |verify|
       verify.threshold = 100

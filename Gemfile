@@ -3,13 +3,9 @@ source 'https://rubygems.org'
 # Specify your gem's dependencies in synapses.gemspec
 gemspec
 
-group :development do
-  gem 'yardstick'
-  gem 'backports'
-  gem 'RedCloth'
-end
+gem 'yardstick'
+gem 'backports'
+gem 'RedCloth'
 
-group :development, :test do
-  gem 'bson'
-  gem 'bson_ext'
-end
+gem 'bson'
+gem 'bson_ext'
