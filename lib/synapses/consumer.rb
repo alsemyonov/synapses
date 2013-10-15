@@ -55,6 +55,19 @@ module Synapses
       queue.subscribe(subscription_options, &method(:message_handler))
     end
 
+    def delegate_all_to(responder)
+      define_singleton_method(:method_missing) do |method, *arguments, &block|
+        if responder.respond_to?(method, true)
+          define_singleton_method(method) do |*args, &block|
+            responder.send(method, *args, &block)
+          end
+          send(method, *arguments, &block)
+        else
+          super(method, *arguments, &block)
+        end
+      end
+    end
+
     # @param [AMQP::Header] metadata
     def message_handler(metadata, payload)
       if (typed_subscriptions = self.subscriptions[metadata.type]).any?

@@ -66,7 +66,7 @@ module Synapses
                   logger.debug("Just bound #{@reply_queue.name} to #{exchange.name}")
                   logger.debug(bind_ok.inspect)
                 end
-                consumer
+                consumer.delegate_all_to(self)
               end
             end
           end
@@ -94,6 +94,10 @@ module Synapses
         end
 
         alias << publish
+
+        def class_name
+          self.class.name
+        end
 
         private
 
@@ -135,30 +139,18 @@ module Synapses
         end
 
         def self.on(*args, &block)
-          #callbacks << [args, block]
           consumer_class.on(*args, &block)
         end
 
         def initialize(options = {})
           logger.debug("Initializing #{self}")
           @channel = options.fetch(:channel) { Synapses.channel }
-          replier = self
-          consumer.define_singleton_method(:method_missing) do |method, *arguments, &block|
-            if replier.respond_to?(method, true)
-              define_singleton_method(method) do |*args, &block|
-                replier.send(method, *args, &block)
-              end
-              send(method, *arguments, &block)
-              #replier.send(method, *arguments, &block)
-            else
-              super(method, *arguments, &block)
-            end
-          end
+          consumer.delegate_all_to(self)
           producer
         end
 
-        def method_missing(*args)
-          super
+        def class_name
+          self.class.name
         end
 
         # @return [AMQP::Channel]

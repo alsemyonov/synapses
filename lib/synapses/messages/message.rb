@@ -95,7 +95,7 @@ module Synapses
       alias type message_type
       alias type= message_type=
 
-      delegate :reply_to, :message_id,
+      delegate :reply_to, :message_id, :correlation_id,
         :ack, :nack, to: '@header', allow_nil: true
 
       def to_metadata
