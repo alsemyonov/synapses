@@ -1,0 +1,21 @@
+synapses.examples.get_time:
+  exchanges:
+    service:
+      type: topic
+      auto_delete: true
+  queues:
+    get_time:
+      exclusive: true
+      auto_delete: true
+      bindings:
+        synapses.examples.get_time.service:
+          routing_key: synapses.examples.get_time.get_time
+  messages:
+    procedure:
+      schema:
+        procedure: String
+        arguments: []
+    procedure_result:
+      schema:
+        procedure: String
+        result: String
