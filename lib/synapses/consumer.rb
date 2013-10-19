@@ -72,7 +72,7 @@ module Synapses
     def message_handler(metadata, payload)
       if (typed_subscriptions = self.subscriptions[metadata.type]).any?
         typed_subscriptions.each do |message_class, block|
-          message = message_class.parse(metadata, payload)
+          message = message_class.new(payload, metadata)
           instance_exec(message, &block)
         end
       end

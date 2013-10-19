@@ -25,7 +25,7 @@ module Synapses
     def publish(message, metadata = {}, &block)
       EM.schedule do
         logger.debug(to_s) { "publishing... #{message} #{metadata}" }
-        metadata = message.to_metadata.merge(metadata) if message.respond_to?(:to_metadata)
+        metadata = message.metadata.merge(metadata) if message.respond_to?(:metadata)
         exchange.publish(message, metadata) do
           logger.debug(to_s) { "published #{message}, #{metadata}]" }
           block.call if block_given?

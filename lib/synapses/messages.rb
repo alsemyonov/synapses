@@ -14,10 +14,14 @@ module Synapses
     # @param [String] payload
     def self.parse(metadata, payload)
       if (message_type = registry[metadata.type])
-        message_type.parse(metadata, payload)
+        message_type.new(payload, metadata)
       else
-        Message.new
+        Message.new(payload, metadata)
       end
+    end
+
+    def self.new(attributes, metadata)
+      Message.new(attributes, metadata)
     end
 
     included do
