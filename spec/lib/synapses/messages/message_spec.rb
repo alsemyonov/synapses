@@ -67,6 +67,25 @@ describe Synapses::Messages::Message do
         its(:to_s) { should == attributes }
       end
 
+      context 'text/x-yaml' do
+        let(:ruby_hash) { {one: :a, two: 'b', three: 3} }
+
+        let(:attributes) { "---\n:one: :a\n:two: b\n:three: 3\n" }
+        let(:metadata) { {content_type: 'text/x-yaml', persistent: true} }
+
+        its(:attributes) { should == ruby_hash }
+        its(:metadata) do
+          should == {
+            content_type: 'text/x-yaml',
+            immediate: false,
+            mandatory: false,
+            persistent: true,
+            routing_key: nil,
+            type: nil
+          }
+        end
+        its(:to_s) { should == attributes }
+      end
     end
 
   end

@@ -1,5 +1,6 @@
 require 'synapses/messages/coders'
-require 'multi_json'
+require 'yaml'
+require 'json'
 
 module Synapses
   module Messages
@@ -11,6 +12,24 @@ module Synapses
         attr_accessor :coders
       end
       self.coders = {}
+      coders['text/x-yaml'] = Class.new do
+        def decode(payload)
+          YAML.load(payload)
+        end
+
+        def encode(payload)
+          YAML.dump(payload)
+        end
+      end.new
+      coders['application/json'] = Class.new do
+        def decode(payload)
+          JSON.parse(payload)
+        end
+
+        def encode(payload)
+          JSON.generate(payload)
+        end
+      end.new
 
       if defined?(::MultiJson)
         coders['application/json'] = MultiJson
