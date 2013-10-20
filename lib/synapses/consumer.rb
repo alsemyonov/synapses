@@ -95,7 +95,7 @@ module Synapses
         #puts "  metadata.delivery_tag: #{metadata.delivery_tag}"
         #puts "  metadata.redelivered : #{metadata.redelivered}"
         #puts "  metadata.exchange    : #{metadata.exchange}"
-        logger.debug("Message was not processed: [#{metadata.type}] #{payload}, #{metadata.inspect}")
+        logger.warn("Message was not processed: [#{metadata.type}] #{payload}, #{metadata.to_hash}")
       end
     rescue => e
       logger.log_exception(e)
