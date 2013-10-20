@@ -11,6 +11,9 @@ end
 
 namespace :doc do
   begin
+    # NOTE this is needed to prevent loading of system rdoc from Ruby 2.0.0
+    gem 'rdoc'
+    require 'rdoc'
     require 'yard'
     YARD::Rake::YardocTask.new(:default)
   rescue LoadError
@@ -47,6 +50,7 @@ namespace :doc do
   end
 end
 
+desc 'Generate Synapses documentation'
 task doc: 'doc:default'
 
 

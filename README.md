@@ -1,7 +1,7 @@
-# Synapses
+# SYNAPSES connecting apps
 
 [![Code Climate](https://codeclimate.com/github/alsemyonov/synapses.png)](https://codeclimate.com/github/alsemyonov/synapses)
-[![Build Status](https://travis-ci.org/alsemyonov/synapses.png?branch=master)](http://travis-ci.org/alsemyonov/synapses)
+[![Build Status](https://travis-ci.org/alsemyonov/synapses.png?branch=master)](https://travis-ci.org/alsemyonov/synapses)
 [![Dependency Status](https://gemnasium.com/alsemyonov/synapses.png)](https://gemnasium.com/alsemyonov/synapses)
 
 TODO: Write a gem description
@@ -22,12 +22,8 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+See `lib/synapses/examples` folder.
 
-## Contributing
-
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+* Contract: {file:lib/synapses/examples/contract.yml lib/synapses/examples/contract.yml}
+* Plain example with producers and consumers: {file:lib/synapses/examples/rockets.rb lib/synapses/examples/rockets.rb}
+* Request-Reply pattern example: {file:lib/synapses/examples/get_time.rb lib/synapses/examples/get_time.rb}

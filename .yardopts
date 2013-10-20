@@ -1,0 +1,8 @@
+--title="SYNAPSES connecting apps"
+--readme README.md
+lib/**/*.rb
+-
+CONTRIBUTING.md
+lib/synapses/examples/contract.yml
+lib/synapses/examples/get_time.rb
+lib/synapses/examples/rockets.rb
