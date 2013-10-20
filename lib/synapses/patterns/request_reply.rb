@@ -91,6 +91,8 @@ module Synapses
               producer.publish(message, options, &block)
             end
           end
+        rescue => e
+          logger.log_exception(e)
         end
 
         alias << publish
