@@ -6,6 +6,9 @@ module Synapses
   class Error < StandardError
   end
 
+  class DeclareError < Error
+  end
+
   class MQError < Error
   end
 

@@ -7,6 +7,9 @@
 
 require 'synapses'
 require 'yaml'
+require 'amqp'
+require 'amqp/exchange'
+require 'amqp/queue'
 
 module Synapses
   # @author Alexander Semyonov <al@semyonov.us>
@@ -75,12 +78,11 @@ module Synapses
         extract_collection(prefix, :messages, hash)
       end
     end
+
     alias << add_contract
 
     def setup!
       EM.schedule do
-        #setup_channel = Synapses.another_channel
-        #setup_channel = Synapses.default_channel
         setup_channel = AMQP.channel
         cache = {
           exchanges: {},
@@ -88,20 +90,33 @@ module Synapses
         }
         exchanges.values.each do |exchange|
           next if exchange.system?
-          logger.debug "Setting up exchange: #{exchange.inspect}"
-          cache[:exchanges][exchange.name] ||= AMQP::Exchange.new(setup_channel, exchange.type, exchange.name, exchange.options)
+          logger.debug "Declaring exchange: #{exchange.inspect}"
+          begin
+            cache[:exchanges][exchange.name] ||=
+              AMQP::Exchange.new(setup_channel, exchange.type, exchange.name, exchange.options) do |exchange, declare_ok|
+                logger.debug("Exchange #{exchange.name} declared, #{declare_ok}")
+              end
+          rescue AMQP::Error => e
+            logger.log_exception(e)
+          end
         end
         queues.values.each do |queue|
           next if queue.system?
-          logger.debug "Setting up queue: #{queue.inspect}"
-          cache[:exchanges][queue.name] ||= AMQP::Queue.new(setup_channel, queue.name, queue.options)
-          queue.bindings.each do |binding, options|
-            exchange = cache[:exchanges][binding]
-            logger.debug "Binding queue #{queue.name} to #{exchange.name}, #{options} (#{cache[:exchanges][binding]})"
-            cache[:exchanges][queue.name].bind(exchange, options.symbolize_keys) do |bind_ok|
-              logger.debug(bind_ok)
-              logger.debug("Just bound #{queue.name} to #{exchange.name}")
+          logger.debug "Declaring queue: #{queue.inspect}"
+          begin
+            cache[:exchanges][queue.name] ||=
+              AMQP::Queue.new(setup_channel, queue.name, queue.options) do |queue, declare_ok|
+                logger.debug("Queue #{queue.name} declared, #{declare_ok}")
+              end
+            queue.bindings.each do |binding, options|
+              exchange = cache[:exchanges][binding]
+              logger.debug "Binding queue #{queue.name} to #{exchange.name}, #{options} (#{cache[:exchanges][binding]})"
+              cache[:exchanges][queue.name].bind(exchange, options.symbolize_keys) do |bind_ok|
+                logger.debug("Just bound #{queue.name} to #{exchange.name}, #{bind_ok}")
+              end
             end
+          rescue => e
+            logger.log_exception(e)
           end
         end
         #setup_channel.close

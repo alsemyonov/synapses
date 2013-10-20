@@ -16,11 +16,20 @@ module Synapses
         @name = name
         @namespace = options.delete('namespace')
         @type = options.delete('type') { raise "Type for exchange #{name} is not set" }.to_sym
-        @options = options || {}
+        self.options = options || {}
       end
 
       def instance_attributes
         [type, name, options]
+      end
+
+      def options=(options)
+        if options['auto_delete'] && options['durable']
+          raise Synapses::DeclareError.new(
+            "Exchange #{name} cannot be auto_delete and durable. Change something to false"
+          )
+        end
+        @options = options
       end
 
       # @return [Hash] see {AMQP::Exchange#initialize}
