@@ -16,6 +16,7 @@ module Synapses
     include Producer::Routable
     include Synapses::Logging
 
+    # @param [AMQP::Channel] channel
     def initialize(channel = AMQP.channel)
       @channel = channel
     end
@@ -23,9 +24,9 @@ module Synapses
     # @param [String, Synapses::Messages::Message] message
     # @param [Hash] metadata
     def publish(message, metadata = {}, &block)
+      metadata = message.metadata.merge(metadata) if message.respond_to?(:metadata)
+      logger.debug(to_s) { "scheduling publishing of #{message} with metadata: #{metadata.inspect}" }
       EM.schedule do
-        logger.debug(to_s) { "publishing... #{message} #{metadata}" }
-        metadata = message.metadata.merge(metadata) if message.respond_to?(:metadata)
         exchange.publish(message, metadata) do
           logger.debug(to_s) { "published #{message}, #{metadata}]" }
           block.call if block_given?
