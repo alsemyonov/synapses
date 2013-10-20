@@ -12,16 +12,12 @@ module Synapses
             module RocketCenter
               module Messages
                 include ::Synapses::Messages
-              
-                
+
                 class Protect < Message
                 end
-              
-                
+
                 class Shed < Message
                 end
-              
-                
               end
             end
           end

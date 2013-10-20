@@ -24,12 +24,11 @@ synapses.examples.rockets.gov:
   exchanges:
     announce:
       type: fanout
-      auto_delete: true
+      auto_delete: false
       durable: true
   queues:
     logger:
       binding: synapses.examples.rockets.gov.radar.announce
-      exclusive: true
       durable: true
   messages:
     ufo:

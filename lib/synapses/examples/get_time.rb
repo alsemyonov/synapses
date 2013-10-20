@@ -1,5 +1,6 @@
 # coding: utf-8
 require 'synapses/examples/setup'
+
 require 'synapses/patterns/request_reply'
 require 'time'
 require 'active_support/core_ext/time/zones'
@@ -74,8 +75,8 @@ if $0 == __FILE__
   include Synapses::Examples
 
   server = GetTime::Server.new
-
   client = GetTime::Client.new
+
   5.times do
     client.get_local
     client.get_utc

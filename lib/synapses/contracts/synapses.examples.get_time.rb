@@ -10,16 +10,12 @@ module Synapses
         module GetTime
           module Messages
             include ::Synapses::Messages
-          
-            
+
             class Procedure < Message
             end
-          
-            
+
             class ProcedureResult < Message
             end
-          
-            
           end
         end
       end
