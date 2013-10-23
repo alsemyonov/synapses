@@ -2,6 +2,7 @@
 
 [![Code Climate](https://codeclimate.com/github/alsemyonov/synapses.png)](https://codeclimate.com/github/alsemyonov/synapses)
 [![Build Status](https://travis-ci.org/alsemyonov/synapses.png?branch=master)](https://travis-ci.org/alsemyonov/synapses)
+[![Coverage Status](https://coveralls.io/repos/alsemyonov/synapses/badge.png)](https://coveralls.io/r/alsemyonov/synapses)
 [![Dependency Status](https://gemnasium.com/alsemyonov/synapses.png)](https://gemnasium.com/alsemyonov/synapses)
 
 TODO: Write a gem description
