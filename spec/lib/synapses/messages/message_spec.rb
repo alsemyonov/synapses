@@ -88,5 +88,38 @@ describe Synapses::Messages::Message do
       end
     end
 
+    context 'AMQP::Header' do
+      let(:channel) do
+        channel = double(AMQP::Channel)
+        channel.stub(:acknowledge).with('delivery_tag', false).and_return(true)
+        channel.stub(:reject).with('delivery_tag', false).and_return(true)
+        channel
+      end
+      let(:method) do
+        method = double(AMQ::Protocol::Method)
+        method.stub(:delivery_tag).and_return('delivery_tag')
+        method.stub(:consumer_tag).and_return('consumer_tag')
+        method
+      end
+      let(:metadata) do
+        AMQP::Header.new(
+          channel,
+          method,
+          {
+            reply_to: 'reply_to',
+            message_id: 'message_id',
+            correlation_id: 'correlation_id',
+            routing_key: 'synapses.examples.a.b.c',
+          }
+        )
+      end
+
+      its(:reply_to) { should == 'reply_to' }
+      its(:message_id) { should == 'message_id' }
+      its(:correlation_id) { should == 'correlation_id' }
+      its(:ack) { should == true }
+      its(:reject) { should == true }
+      its(:routing_key) { should == 'synapses.examples.a.b.c' }
+    end
   end
 end

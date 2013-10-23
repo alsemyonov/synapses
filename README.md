@@ -10,15 +10,21 @@ TODO: Write a gem description
 
 Add this line to your application's Gemfile:
 
-    gem 'synapses'
+```ruby
+gem 'synapses'
+```
 
 And then execute:
 
-    $ bundle
+```bash
+bundle
+```
 
 Or install it yourself as:
 
-    $ gem install synapses
+```bash
+gem install synapses
+```
 
 ## Usage
 
