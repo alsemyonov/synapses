@@ -34,3 +34,7 @@ See `lib/synapses/examples` folder.
 * Contract: {file:lib/synapses/examples/contract.yml lib/synapses/examples/contract.yml}
 * Plain example with producers and consumers: {file:lib/synapses/examples/rockets.rb lib/synapses/examples/rockets.rb}
 * Request-Reply pattern example: {file:lib/synapses/examples/get_time.rb lib/synapses/examples/get_time.rb}
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/alsemyonov/synapses/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
